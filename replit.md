@@ -25,3 +25,7 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+
+## Standalone projects
+
+- `webshop-backend/` — különálló Node.js + Express + MySQL (XAMPP) RESTful backend MVC felépítéssel a [Boronen/webshop_OOP](https://github.com/Boronen/webshop_OOP) frontendhez. Saját `package.json`-nal, plain JavaScript (CommonJS), nem része a pnpm monorepo-nak. Részletes telepítési és használati útmutató a `webshop-backend/README.md` fájlban.
