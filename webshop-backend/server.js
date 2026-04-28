@@ -3,11 +3,13 @@
 // ---------------------------------------------------------------------
 // Itt állítjuk össze az alkalmazást:
 //   1) middleware-ek (CORS, JSON parser, méret-limit)
-//   2) route-ok bekötése (termekRoutes)
-//   3) hibakezelő middleware
-//   4) szerver elindítása a megadott PORT-on
+//   2) statikus fájlok kiszolgálása a /public mappából (frontend)
+//   3) route-ok bekötése (termekRoutes)
+//   4) hibakezelő middleware
+//   5) szerver elindítása a megadott PORT-on
 // =====================================================================
 
+const path    = require('path');
 const express = require('express');
 const cors    = require('cors');
 require('dotenv').config();
@@ -19,6 +21,7 @@ const PORT = process.env.PORT || 3000;
 
 // ----- Middleware-ek -----
 // CORS: engedélyezzük, hogy a (más porton futó) frontend hívhassa a backendet.
+// Mivel a frontendet most ugyanaz a szerver szolgálja ki, ez "csak biztosíték".
 app.use(cors());
 
 // JSON kérés-test feldolgozása.
@@ -32,6 +35,11 @@ app.use((req, _res, next) => {
     next();
 });
 
+// ----- Statikus fájlok (frontend) -----
+// http://localhost:3000/         -> public/index.html (vásárlói oldal)
+// http://localhost:3000/admin.html -> public/admin.html (admin oldal)
+app.use(express.static(path.join(__dirname, 'public')));
+
 // ----- Egészségellenőrző végpont -----
 app.get('/api/healthz', (_req, res) => {
     res.json({ status: 'ok', uzenet: 'A szerver fut.' });
@@ -40,8 +48,8 @@ app.get('/api/healthz', (_req, res) => {
 // ----- Üzleti route-ok -----
 app.use('/api/termekek', termekRoutes);
 
-// ----- 404 kezelő -----
-app.use((req, res) => {
+// ----- 404 kezelő (csak az /api/* végpontokra) -----
+app.use('/api', (req, res) => {
     res.status(404).json({ uzenet: `Nincs ilyen végpont: ${req.method} ${req.originalUrl}` });
 });
 
@@ -54,7 +62,9 @@ app.use((err, _req, res, _next) => {
 // ----- Szerver indítása -----
 app.listen(PORT, () => {
     console.log('=================================================');
-    console.log(`  Webshop backend fut: http://localhost:${PORT}`);
-    console.log(`  Termékek végpont:    http://localhost:${PORT}/api/termekek`);
+    console.log(`  Webshop fut: http://localhost:${PORT}`);
+    console.log(`  Vásárlói oldal: http://localhost:${PORT}/`);
+    console.log(`  Admin oldal:    http://localhost:${PORT}/admin.html`);
+    console.log(`  Termékek API:   http://localhost:${PORT}/api/termekek`);
     console.log('=================================================');
 });

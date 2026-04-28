@@ -146,6 +146,17 @@ class TermekController {
             res.status(500).json({ uzenet: 'Szerverhiba a termék törlésekor.' });
         }
     }
+
+    // POST /api/termekek/reset — alapértelmezett terméklista visszaállítása
+    static async reset(_req, res) {
+        try {
+            const db = await TermekModell.reset();
+            res.status(200).json({ uzenet: 'Alapértelmezett terméklista visszaállítva.', darab: db });
+        } catch (err) {
+            console.error('[reset] Hiba:', err.message);
+            res.status(500).json({ uzenet: 'Szerverhiba a visszaállításkor.' });
+        }
+    }
 }
 
 module.exports = TermekController;

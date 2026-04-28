@@ -76,6 +76,44 @@ class TermekModell {
         const [eredmeny] = await pool.query(sql, [id]);
         return eredmeny.affectedRows;
     }
+
+    // Az ÖSSZES termék törlése + az alap 8 termék visszaállítása.
+    // Tranzakcióban fut, hogy ne maradjon félig törölt állapotban.
+    static async reset() {
+        const alapTermekek = [
+            ['Laptop',        200000, 'electronics', 'HP Pavilion 15, 8GB RAM, 256GB SSD', 'https://placehold.co/400x300?text=Laptop'],
+            ['Telefon',       150000, 'electronics', 'Samsung Galaxy S23, 128GB',          'https://placehold.co/400x300?text=Telefon'],
+            ['Póló',            5000, 'clothing',    'Fehér póló, 100% pamut',             'https://placehold.co/400x300?text=Polo'],
+            ['Zokni',           1000, 'clothing',    'Kék zokni, 80% pamut',               'https://placehold.co/400x300?text=Zokni'],
+            ['Tál',             2000, 'home',        'Porcelán tál, fehér',                'https://placehold.co/400x300?text=Tal'],
+            ['Vízkeverő',       3000, 'home',        'Stainless steel vízkeverő',          'https://placehold.co/400x300?text=Vizkevero'],
+            ['Monitor',        80000, 'electronics', 'Dell 24", Full HD',                  'https://placehold.co/400x300?text=Monitor'],
+            ['Szakácsöltöny',  10000, 'home',        'Fehér szakácsöltöny, M méret',       'https://placehold.co/400x300?text=Szakacs']
+        ];
+
+        const conn = await pool.getConnection();
+        try {
+            await conn.beginTransaction();
+            await conn.query('DELETE FROM termekek');
+            await conn.query('ALTER TABLE termekek AUTO_INCREMENT = 1');
+
+            const insertSql = `
+                INSERT INTO termekek (nev, ar, kategoria, leiras, kep)
+                VALUES (?, ?, ?, ?, ?)
+            `;
+            for (const sor of alapTermekek) {
+                await conn.query(insertSql, sor);
+            }
+
+            await conn.commit();
+            return alapTermekek.length;
+        } catch (err) {
+            await conn.rollback();
+            throw err;
+        } finally {
+            conn.release();
+        }
+    }
 }
 
 module.exports = TermekModell;
